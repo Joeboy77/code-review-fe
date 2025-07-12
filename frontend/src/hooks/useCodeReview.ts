@@ -1,5 +1,14 @@
 import { useCallback, useState } from "react";
+import { notification } from "antd";
+import { reviewService } from "../services/api";
 import type { Issue, UseAlternativeSolutionReturn, UseCodeReviewReturn, UseVideoGenerationReturn } from "../types";
+
+function extractRepoAndFile(url: string) {
+  const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
+  if (!match) return { repo: '', file: '' };
+  const [, owner, repo, , file] = match;
+  return { repo: `${owner}/${repo.replace(/\.git$/, '')}`, file };
+}
 
 export const useCodeReview = (): UseCodeReviewReturn => {
   const [review, setReview] = useState<string>('');
@@ -8,44 +17,71 @@ export const useCodeReview = (): UseCodeReviewReturn => {
   const [loading, setLoading] = useState<boolean>(false);
   const [warning, setWarning] = useState<string>('');
 
-  const getReview = useCallback((url: string) => {
-    setLoading(true);
+  const resetAnalysis = useCallback(() => {
+    setReview('');
+    setCode('');
+    setIssues([]);
     setWarning('');
-    
-    // Simulate API call
-    setTimeout(() => {
-      setReview('This is a well-structured React component with good separation of concerns. The code follows React best practices and uses TypeScript effectively. However, there are a few areas that could be improved for better maintainability and performance.');
-      setCode(`import React, { useState, useCallback } from 'react';
-import { Button, Skeleton, notification } from 'antd';
-
-const App: React.FC = () => {
-  const [url, setUrl] = useState<string>('');
-  const [selectedLine, setSelectedLine] = useState<number | null>(null);
-  
-  const handleSubmit = useCallback((): void => {
-    if (!url.trim()) return;
-    // Process URL
-  }, [url]);
-
-  return (
-    <div className="app">
-      <h1>Code Review Tool</h1>
-      {/* Component content */}
-    </div>
-  );
-};
-
-export default App;`);
-      setIssues([
-        { line: 3, severity: 'medium', message: 'Consider using a more specific type than any for better type safety' },
-        { line: 8, severity: 'low', message: 'This function could be optimized by using useMemo' },
-        { line: 12, severity: 'high', message: 'Missing error handling for this async operation' }
-      ]);
-      setLoading(false);
-    }, 2000);
+    setLoading(false);
   }, []);
 
-  return { review, code, issues, loading, warning, getReview };
+  const getReview = useCallback(async (url: string) => {
+    setLoading(true);
+    setWarning('');
+    setReview('');
+    setCode('');
+    setIssues([]);
+    
+    try {
+      const data = await reviewService.getReview(url);
+      
+      if (data.review) {
+        setReview(data.review);
+      }
+      
+      if (data.code) {
+        setCode(data.code);
+      }
+      
+      if (data.issues && Array.isArray(data.issues)) {
+        setIssues(data.issues);
+      }
+      
+      if (data.warning) {
+        setWarning(data.warning);
+      }
+      
+      // Record evolution snapshot
+      const { repo, file } = extractRepoAndFile(url);
+      if (repo && data.code && data.review) {
+        await reviewService.recordEvolution({
+          repo,
+          file,
+          timestamp: Date.now(),
+          metrics: {
+            maintainabilityIndex: data.metrics?.maintainabilityIndex || 0,
+            complexityScore: data.metrics?.complexityScore || 0,
+            securityScore: data.metrics?.security?.score || 0,
+          },
+        });
+      }
+      
+      notification.success({ 
+        message: 'Code Review Complete', 
+        description: 'Your code has been analyzed successfully!' 
+      });
+    } catch (error) {
+      console.error('Failed to get code review:', error);
+      notification.error({ 
+        message: 'Error', 
+        description: 'Failed to analyze code. Please check your URL and try again.' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { review, code, issues, loading, warning, getReview, resetAnalysis };
 };
 
 export const useVideoGeneration = (): UseVideoGenerationReturn => {

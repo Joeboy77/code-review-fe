@@ -1,8 +1,107 @@
 // Types
 export interface Issue {
-  line: number;
-  severity: 'high' | 'medium' | 'low';
-  message: string;
+  line?: number;
+  snippet?: string;
+  explanation: string;
+  severity: 'Critical' | 'Warning' | 'Info' | 'high' | 'medium' | 'low';
+  category: string;
+  message?: string; // For backward compatibility
+}
+
+// Alias for backward compatibility
+export type CodeIssue = Issue;
+
+export type SeverityColor = 'red' | 'orange' | 'blue' | 'gray';
+
+export interface SeverityBreakdown {
+  Critical: number;
+  Warning: number;
+  Info: number;
+}
+
+// Complexity Analysis Types
+export interface ComplexityMetrics {
+  totalLines: number;
+  nonEmptyLines: number;
+  commentLines: number;
+  functionCount: number;
+  complexityScore: number;
+  maintainabilityIndex: number;
+  performanceScore: number;
+  codeToCommentRatio: number;
+}
+
+export interface ComplexityBreakdown {
+  ifStatements: number;
+  forLoops: number;
+  whileLoops: number;
+  switchStatements: number;
+  tryCatchBlocks: number;
+}
+
+export interface SecurityAnalysis {
+  issues: string[];
+  score: number;
+}
+
+export interface ComplexityAnalysisData {
+  metrics: ComplexityMetrics;
+  complexity: ComplexityBreakdown;
+  security: SecurityAnalysis;
+  recommendations: string[];
+  insights: string;
+  code: string;
+}
+
+// Repository Analysis Types
+export interface RepositoryInfo {
+  owner: string;
+  name: string;
+  branch: string;
+  url: string;
+}
+
+export interface RepositoryOverview {
+  totalFiles: number;
+  totalLines: number;
+  totalFunctions: number;
+  averageMaintainability: number;
+  averagePerformance: number;
+  securityIssues: string[];
+  fileTypes: Record<string, number>;
+}
+
+export interface FileAnalysis {
+  path: string;
+  size: number;
+  analysis: ComplexityAnalysisData;
+}
+
+export interface RepositoryAnalysisData {
+  repository: RepositoryInfo;
+  overview: RepositoryOverview;
+  files: FileAnalysis[];
+  insights: string;
+  recommendations: string[];
+}
+
+// API Response Types
+export interface ReviewData {
+  review: string;
+  code: string;
+  issues: Issue[];
+  warning?: string;
+}
+
+export interface AlternativeSolutionData {
+  suggestion: string;
+}
+
+export interface VideoData {
+  jobId?: string;
+  videoUrl?: string;
+  status?: string;
+  raw?: any;
 }
 
 export interface CodeInputProps {
