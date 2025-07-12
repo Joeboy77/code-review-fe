@@ -8,11 +8,14 @@ export const Header: React.FC<HeaderProps> = ({
     <div className="flex items-center space-x-3">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          AI Code Review Assistant
+          Pip-son AI Code Review Assistant
         </h1>
+
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Paste a GitHub file URL to get an instant AI review.
         </p>
+
+        <h2 className=" font-bold text-2xl text-gray-900 dark:text-white mt-2 " >100% Powered by Alle-AI</h2>
       </div>
     </div>
     {/* <button
